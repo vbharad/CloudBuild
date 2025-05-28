@@ -1,23 +1,81 @@
-steps:
-  # Docker Build
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/my-docker-repo/myimage', 
-           '.']
-
-  # Docker Push
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/my-docker-repo/myimage']
-
-  # Entrypoint, timeout and environment variables
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    timeout: 240s
-    args: ['compute', 'instances', 
-           'create-with-container', 'my-vm-name',
-           '--container-image', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/my-docker-repo/myimage']
-    env:
-      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hello
+  namespace: '329702247073'
+  selfLink: /apis/serving.knative.dev/v1/namespaces/329702247073/services/hello
+  uid: 8d443518-8d3c-48d0-ae32-10ab62776983
+  resourceVersion: AAY2MCqW9bE
+  generation: 4
+  creationTimestamp: '2025-05-28T11:03:05.132762Z'
+  labels:
+    cloud.googleapis.com/location: europe-west1
+  annotations:
+    serving.knative.dev/creator: vbharad5@gmail.com
+    serving.knative.dev/lastModifier: vbharad5@gmail.com
+    run.googleapis.com/client-name: cloud-console
+    run.googleapis.com/operation-id: aacf21f1-9677-4b39-95dd-00f5f4dada86
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/urls: '["https://hello-329702247073.europe-west1.run.app","https://hello-wuuceagjtq-ew.a.run.app"]'
+spec:
+  template:
+    metadata:
+      labels:
+        client.knative.dev/nonce: ec8b119b-5333-4fec-bab2-d158dccdadaa
+        run.googleapis.com/startupProbeType: Default
+      annotations:
+        autoscaling.knative.dev/maxScale: '100'
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: 329702247073-compute@developer.gserviceaccount.com
+      containers:
+      - name: hello-1
+        image: us-docker.pkg.dev/cloudrun/container/hello
+        ports:
+        - name: http1
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        livenessProbe:
+          timeoutSeconds: 1
+          periodSeconds: 10
+          failureThreshold: 3
+          httpGet:
+            path: /test
+            port: 8080
+        startupProbe:
+          timeoutSeconds: 240
+          periodSeconds: 240
+          failureThreshold: 1
+          tcpSocket:
+            port: 8080
+  traffic:
+  - percent: 100
+    latestRevision: true
+status:
+  observedGeneration: 4
+  conditions:
+  - type: Ready
+    status: 'True'
+    lastTransitionTime: '2025-05-28T11:04:38.611190Z'
+  - type: ConfigurationsReady
+    status: 'True'
+    lastTransitionTime: '2025-05-28T11:04:37.332584Z'
+  - type: RoutesReady
+    status: 'True'
+    lastTransitionTime: '2025-05-28T11:04:38.569372Z'
+  latestReadyRevisionName: hello-00002-xjt
+  latestCreatedRevisionName: hello-00002-xjt
+  traffic:
+  - revisionName: hello-00002-xjt
+    percent: 100
+    latestRevision: true
+  url: https://hello-wuuceagjtq-ew.a.run.app
+  address:
+    url: https://hello-wuuceagjtq-ew.a.run.app
